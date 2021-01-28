@@ -35,6 +35,7 @@
 #ifndef ROS_ARDUINO_HARDWARE_H_
 #define ROS_ARDUINO_HARDWARE_H_
 
+#if 0
 #if ARDUINO>=100
   #include <Arduino.h>  // Arduino 1.0
 #else
@@ -61,6 +62,7 @@
   #include <HardwareSerial.h>  // Arduino AVR
   #define SERIAL_CLASS HardwareSerial
 #endif
+
 
 class ArduinoHardware {
   public:
@@ -113,6 +115,47 @@ class ArduinoHardware {
   protected:
     SERIAL_CLASS* iostream;
     long baud_;
+};
+
+#endif
+
+#include "usart.h"
+
+class ArduinoHardware {
+    UART_HandleTypeDef *huart;
+  public:
+    ArduinoHardware(UART_HandleTypeDef *huart) : huart(huart)
+    {};
+
+    void setPort() {
+
+    };
+    void setBaud(long baud) {
+
+    };
+
+    int getBaud() {
+
+        return 115200;
+    };
+
+    void init() {
+
+    };
+
+    int read() {
+
+    };
+
+    void write(uint8_t* data, int length) {
+        auto res = HAL_UART_Transmit(huart, data, length, 1000);
+        if (res != HAL_OK)
+            exit(0);
+    };
+
+    unsigned long time() {
+        return HAL_GetTick();
+    };
 };
 
 #endif
