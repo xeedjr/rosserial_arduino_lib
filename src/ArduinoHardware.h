@@ -120,12 +120,38 @@ class ArduinoHardware {
 #endif
 
 #include "usart.h"
+#include "RingBufCPP.h"
+
+static class ArduinoHardware *this_local = nullptr;
+
+void roserial_update();
 
 class ArduinoHardware {
     UART_HandleTypeDef *huart;
+    RingBufCPP<uint8_t, 255> in_buffer;
+    uint8_t recv_byte;
+
   public:
     ArduinoHardware(UART_HandleTypeDef *huart) : huart(huart)
-    {};
+    {
+        this_local = this;
+
+
+    };
+
+    void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+        char c = recv_byte;
+
+        auto ret = HAL_UART_Receive_IT(huart, &recv_byte, sizeof(recv_byte));
+        if (HAL_OK != ret) {
+            exit(0);
+        };
+
+        if (!in_buffer.addISR(c))
+            exit(-2);
+
+        roserial_update();
+    }
 
     void setPort() {
 
@@ -140,11 +166,24 @@ class ArduinoHardware {
     };
 
     void init() {
+        if (HAL_OK != HAL_UART_RegisterCallback(huart, HAL_UART_RX_COMPLETE_CB_ID, [](UART_HandleTypeDef *huart){
+            this_local->HAL_UART_RxCpltCallback(huart);
+        })) {
+            exit(0);
+        };
 
+        if (HAL_OK != HAL_UART_Receive_IT(huart, &recv_byte, sizeof(recv_byte))) {
+            exit(0);
+        };
     };
 
     int read() {
+        if (in_buffer.isEmpty())
+            return -1;
 
+        uint8_t c = 0;
+        in_buffer.pull(&c);
+        return c;
     };
 
     void write(uint8_t* data, int length) {
