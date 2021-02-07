@@ -124,7 +124,7 @@ class ArduinoHardware {
 
 static class ArduinoHardware *this_local = nullptr;
 
-void roserial_update();
+void roserial_update(uint8_t ch);
 
 class ArduinoHardware {
     UART_HandleTypeDef *huart;
@@ -132,6 +132,8 @@ class ArduinoHardware {
     uint8_t recv_byte;
 
   public:
+    int rbyte = -1;
+
     ArduinoHardware(UART_HandleTypeDef *huart) : huart(huart)
     {
         this_local = this;
@@ -147,10 +149,7 @@ class ArduinoHardware {
             exit(0);
         };
 
-        if (!in_buffer.addISR(c))
-            exit(-2);
-
-        roserial_update();
+        roserial_update(c);
     }
 
     void setPort() {
@@ -178,11 +177,11 @@ class ArduinoHardware {
     };
 
     int read() {
-        if (in_buffer.isEmpty())
+        if (rbyte == -1)
             return -1;
 
-        uint8_t c = 0;
-        in_buffer.pull(&c);
+        uint8_t c = rbyte;
+        rbyte = -1;
         return c;
     };
 
