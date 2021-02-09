@@ -120,7 +120,6 @@ class ArduinoHardware {
 #endif
 
 #include "usart.h"
-#include "RingBufCPP.h"
 
 static class ArduinoHardware *this_local = nullptr;
 
@@ -128,7 +127,6 @@ void roserial_update(uint8_t ch);
 
 class ArduinoHardware {
     UART_HandleTypeDef *huart;
-    RingBufCPP<uint8_t, 255> in_buffer;
     uint8_t recv_byte;
 
   public:
